@@ -1,0 +1,42 @@
+#include <SoftwareSerial.h>
+
+// Define software serial pins for GSM module
+SoftwareSerial gsm(7, 8); // RX, TX
+
+// Define RF signal input pin
+int rfSignalPin = 2;
+
+// Flag to prevent repeated SMS alerts
+bool theftDetected = false;
+
+void setup() {
+  pinMode(rfSignalPin, INPUT); // RF receiver input
+  gsm.begin(9600);             // Start GSM serial
+  Serial.begin(9600);          // Start serial monitor
+}
+
+void loop() {
+  int signal = digitalRead(rfSignalPin); // Read RF signal
+
+  if (signal == HIGH && !theftDetected) {
+    theftDetected = true;        // Mark theft as detected
+    sendTheftAlert();            // Send SMS to owner
+    disableVehicle();            // Simulate vehicle shutdown
+  }
+}
+
+void sendTheftAlert() {
+  gsm.println("AT+CMGF=1");                             // Set GSM to text mode
+  delay(1000);
+  gsm.println("AT+CMGS=\"+91XXXXXXXXXX\"");             // Replace with your phone number
+  delay(1000);
+  gsm.println("Theft detected! Vehicle disabled remotely."); // SMS content
+  gsm.write(26);                                        // CTRL+Z to send SMS
+  delay(1000);
+}
+
+void disableVehicle() {
+  Serial.println("Vehicle disabled via RF signal."); // Print message to Serial Monitor
+  // Optional: Add relay control code here to cut off engine
+  // digitalWrite(relayPin, LOW);
+}
